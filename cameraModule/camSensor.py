@@ -4,6 +4,7 @@ import numpy as np
 import ArducamDepthCamera as ac
 import serial
 import time
+import os
 from datetime import datetime
 
 # Membuat objek serial untuk komunikasi dengan Arduino
@@ -107,45 +108,58 @@ if __name__ == "__main__":
     cv2.namedWindow("preview", cv2.WINDOW_AUTOSIZE)
     cv2.setMouseCallback("preview",on_mouse)
     
-    # Membuat objek VideoWriter
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Mengubah codec menjadi 'mp4v'
-    current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    out_raw = cv2.VideoWriter(f'records/raw-{current_time}.mp4', fourcc, 20.0, (1280, 720))  # Mengubah ukuran frame menjadi 720p dan format menjadi .mp4
-    out_depth = cv2.VideoWriter(f'records/depth-{current_time}.mp4', fourcc, 20.0, (1280, 720))  # Mengubah ukuran frame menjadi 720p dan format menjadi .mp4
+    try:
+        # Membuat objek VideoWriter
+        fourcc = cv2.VideoWriter_fourcc(*'XVID') 
+        current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        if not os.path.exists('records'):
+            os.makedirs('records')
+        out_raw = cv2.VideoWriter(f'records/raw-{current_time}.avi', fourcc, 20.0, (480, 640))  
+        out_depth = cv2.VideoWriter(f'records/depth-{current_time}.avi', fourcc, 20.0, (480, 640)) 
+        while True:
+            frame = cam.requestFrame(200)
+            if frame != None:
+                depth_buf = frame.getDepthData()
+                amplitude_buf = frame.getAmplitudeData()
+                # Raw cam
+                cam.releaseFrame(frame)
+                amplitude_buf*=(255/1024)
+                amplitude_buf = np.clip(amplitude_buf, 0, 255)
+                # Depth Cam
+                result_image = process_frame(depth_buf,amplitude_buf)
+                result_image = cv2.applyColorMap(result_image, cv2.COLORMAP_JET)
+                cv2.rectangle(result_image,(selectRect.start_x,selectRect.start_y),(selectRect.end_x,selectRect.end_y),(128,128,128), 1)
+                cv2.rectangle(result_image,(followRect.start_x,followRect.start_y),(followRect.end_x,followRect.end_y),(255,255,255), 1)
+        
+                # Menampilkan jarak
+                distance = Distance(depth_buf)
+                print(f'Left:{round(distance.left(),2)} | Center:{round(distance.center(),2)} | Right:{round(distance.right(),2)}')
+                try:
+                    distance.rules()
+                except KeyboardInterrupt:
+                    break
+                
+                # Menampilkan frame camera
+                amplitude_buf = amplitude_buf.astype(np.uint8)
+                result_image = result_image.astype(np.uint8)
+                cv2.imshow("preview_amplitude", amplitude_buf)
+                cv2.imshow("preview",result_image)
+                # Memulai Rekaman
+                out_raw.write(amplitude_buf)
+                out_depth.write(result_image)
 
-    while True:
-        frame = cam.requestFrame(200)
-        if frame != None:
-            depth_buf = frame.getDepthData()
-            amplitude_buf = frame.getAmplitudeData()
-            # Raw cam
-            cam.releaseFrame(frame)
-            amplitude_buf*=(255/1024)
-            amplitude_buf = np.clip(amplitude_buf, 0, 255)
-            # Depth Cam
-            result_image = process_frame(depth_buf,amplitude_buf)
-            result_image = cv2.applyColorMap(result_image, cv2.COLORMAP_JET)
-            cv2.rectangle(result_image,(selectRect.start_x,selectRect.start_y),(selectRect.end_x,selectRect.end_y),(128,128,128), 1)
-            cv2.rectangle(result_image,(followRect.start_x,followRect.start_y),(followRect.end_x,followRect.end_y),(255,255,255), 1)
-    
-            # Menampilkan jarak
-            distance = Distance(depth_buf)
-            print(f'Left:{round(distance.left(),2)} | Center:{round(distance.center(),2)} | Right:{round(distance.right(),2)}')
-            distance.rules()
-            
-            # Memulai Rekaman
-            out_raw.write(amplitude_buf)
-            out_depth.write(result_image)
-            # Menampilkan frame camera
-            cv2.imshow("preview_amplitude", amplitude_buf.astype(np.uint8))
-            cv2.imshow("preview",result_image)
-
-            key = cv2.waitKey(1)
-            if key == ord("q"):
-                exit_ = True
-                cam.stop()
-                cam.close()
-                out_raw.release()  
-                out_depth.release()
-                cv2.destroyAllWindows()
-                sys.exit(0)
+                key = cv2.waitKey(1)
+                if key == ord("q"):
+                    break
+    except KeyboardInterrupt:
+        pass
+    finally:
+        try:
+            cam.stop()
+            cam.close()
+            out_raw.release()  
+            out_depth.release()
+        except Exception as e:
+            print(f"Error when stopping the camera: {e}")
+        cv2.destroyAllWindows()
+        sys.exit(0)

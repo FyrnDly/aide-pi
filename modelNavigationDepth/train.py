@@ -50,7 +50,9 @@ class PolicyGradientAgent:
     def get_expected_reward(self, state, action):
         # Implementasikan fungsi ini untuk menghitung expected reward
         left, front, right = state
-        if front < 60 or action == 0 or action == 4:
+        if action == 1:
+            reward = 0
+        elif front < 60 or action == 0 or action == 4:
             reward = -1
         else:
             reward = 1

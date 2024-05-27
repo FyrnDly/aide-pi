@@ -31,10 +31,10 @@ pyasn1_modules==0.4.0
 pycparser==2.22
 PyJWT==2.8.0
 pyparsing==3.1.2
+pyserial==3.5
 python-dotenv==1.0.1
 PyYAML==6.0.1
 requests==2.32.2
 rsa==4.9
-serial==0.0.97
 uritemplate==4.1.1
 urllib3==2.2.1

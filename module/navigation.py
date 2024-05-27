@@ -1,7 +1,7 @@
 import numpy as np
 
 class PolicyGradientAgent:
-    def __init__(self, alpha=0.1, epsilon=0.01, road_condition=0):
+    def __init__(self, alpha=0.1, epsilon=1, road_condition=0):
         self.alpha = alpha
         self.epsilon = epsilon
         self.parameters = np.array([80, 60])  # Parameters distance
@@ -30,27 +30,21 @@ class PolicyGradientAgent:
         # Hitung gradien dari expected reward terhadap parameter
         grad = np.zeros_like(self.parameters)
         for i in range(len(self.parameters)):
-            old_param = self.parameters[i]
-            self.parameters[i] = old_param + self.epsilon
-            reward_plus = self.get_expected_reward(state, action)
-            self.parameters[i] = old_param - self.epsilon
-            reward_minus = self.get_expected_reward(state, action)
-            self.parameters[i] = old_param  # Kembalikan parameter ke nilai aslinya
-            grad[i] = (reward_plus - reward_minus) / (2 * self.epsilon)
+            reward = self.get_expected_reward(state, action)
+            grad[i] = reward / self.epsilon
 
         # Perbarui parameter menggunakan gradien
+        self.parameters = self.parameters.astype(float)
         self.parameters += self.alpha * grad
 
 
     def get_expected_reward(self, state, action):
         # Implementasikan fungsi ini untuk menghitung expected reward
         left, front, right = state
-        if action == 1:
-            reward = 0
-        elif front < 60 or action == 0 or action == 4:
-            reward = -1
-        else:
+        if front < self.parameters[1] or action == 0 or action == 4:
             reward = 1
+        else:
+            reward = 0
         return reward
     
     def get_com(self, action):

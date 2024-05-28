@@ -41,6 +41,7 @@ class AgentModel:
         old_parameter = self.parameter
         self.parameter += self.epsilon * self.parameter
         reward_plus = self.get_expected_reward(state, action)
+        self.parameter = old_parameter
         self.parameter -= self.epsilon * self.parameter
         reward_minus = self.get_expected_reward(state, action)
         grad = (reward_plus + reward_minus) / (2 * self.epsilon)

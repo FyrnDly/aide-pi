@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import keyboard
 import ArducamDepthCamera as ac
 import serial
 import pickle
@@ -86,37 +87,32 @@ if path.isfile('model.pkl'):
 else:
     agent = PolicyGradientAgent()
 
-try:
-    # Cek Kondisi jalanan
-    road_condition = 0 # Update dengan API
-    agent.road_condition = road_condition
-    # Membuat objek serial untuk komunikasi dengan Arduino
-    ser = serial.Serial('/dev/ttyACM0', 9600)
-    cam = ac.ArducamCamera()
-    # Initialize camera
-    if cam.open(ac.TOFConnect.CSI,0) != 0 :
-        print("initialization failed")
-    if cam.start(ac.TOFOutput.DEPTH) != 0 :
-        print("Failed to start camera")
-    # Main loop
-    while True:
-        # Get current state
-        frame = cam.requestFrame(200)
-        if frame != None:
-            depth_buf = frame.getDepthData()
-            cam.releaseFrame(frame)
-            state = get_current_state(depth_buf)
-            # Choose action
-            action = agent.choose_action(state)
-            # Com serial
-            agent.get_com(action)
-            # Update Parameters
-            agent.update_parameters(state, action)
-
-except KeyboardInterrupt:
-    pass
-except Exception as e:
-    print(f"Errors {e}")
-finally:
-    with open('model.pkl','wb') as model:
-        pickle.dump(agent,model)
+# Cek Kondisi jalanan
+road_condition = 0 # Update dengan API
+agent.road_condition = road_condition
+# Membuat objek serial untuk komunikasi dengan Arduino
+ser = serial.Serial('/dev/ttyACM0', 9600)
+cam = ac.ArducamCamera()
+# Initialize camera
+if cam.open(ac.TOFConnect.CSI,0) != 0 :
+    print("initialization failed")
+if cam.start(ac.TOFOutput.DEPTH) != 0 :
+    print("Failed to start camera")
+# Main loop
+while True:
+    # Get current state
+    frame = cam.requestFrame(200)
+    if frame != None:
+        depth_buf = frame.getDepthData()
+        cam.releaseFrame(frame)
+        state = get_current_state(depth_buf)
+        # Choose action
+        action = agent.choose_action(state)
+        # Com serial
+        agent.get_com(action)
+        # Update Parameters
+        agent.update_parameters(state, action)
+    if keyboard.is_pressed('q'):
+        break
+with open('model.pkl','wb') as model:
+    pickle.dump(agent,model)

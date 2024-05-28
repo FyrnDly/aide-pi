@@ -1,10 +1,15 @@
+aniso8601==9.0.1
+blinker==1.8.2
 CacheControl==0.14.0
 cachetools==5.3.3
 certifi==2024.2.2
 cffi==1.16.0
 charset-normalizer==3.3.2
+click==8.1.7
+colorama==0.4.6
 cryptography==42.0.7
 firebase-admin==6.5.0
+Flask==3.0.3
 future==1.0.0
 google-api-core==2.19.0
 google-api-python-client==2.130.0
@@ -21,6 +26,9 @@ grpcio-status==1.62.2
 httplib2==0.22.0
 idna==3.7
 iso8601==2.1.0
+itsdangerous==2.2.0
+Jinja2==3.1.4
+MarkupSafe==2.1.5
 msgpack==1.0.8
 numpy==1.26.4
 opencv-python==4.9.0.80
@@ -33,8 +41,11 @@ PyJWT==2.8.0
 pyparsing==3.1.2
 pyserial==3.5
 python-dotenv==1.0.1
+pytz==2024.1
 PyYAML==6.0.1
 requests==2.32.2
 rsa==4.9
+six==1.16.0
 uritemplate==4.1.1
 urllib3==2.2.1
+Werkzeug==3.0.3

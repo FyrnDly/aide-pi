@@ -35,12 +35,14 @@ if __name__ == "__main__":
         url_firebase = os.getenv('URL_FIREBASE', None)
         path_file_cred = os.getenv('CRED_PATH', None)
         app_fb = ConnectFirebase(path_file_cred, url_firebase)
-        app_fb.get_connect()
+        try:
+            app_fb.get_connect()
 
-        # Get Schedule Operations
-        schedule = app_fb.get_schedule()
-        hour_schedule = schedule.keys()
-
+            # Get Schedule Operations
+            schedule = app_fb.get_schedule()
+            hour_schedule = schedule.keys()
+        except Exception as e:
+            print(f'Errors: {str(e)}')
         # Initialize Coms Serial
         ser = serial.Serial('COM4',9600)
         while True:
@@ -48,6 +50,7 @@ if __name__ == "__main__":
             time_zone = dt.now()
             hour = time_zone.strftime('%H:%M')
             second = time_zone.strftime('%S')
+            minute = time_zone('%M')
             
             # Check this time operations
             # Running Robot
@@ -66,5 +69,15 @@ if __name__ == "__main__":
                     except Exception as e:
                         print(f"Data tidak valid: {str(e)} | {type(response)}")
                         
+            # Update Schedule and Try Connect Firebase every hour
+            if minute == '01':
+                try:
+                    # Connect to firebase
+                    app_fb.get_connect()
+                    # Get Schedule Operations
+                    schedule = app_fb.get_schedule()
+                    hour_schedule = schedule.keys()
+                except Exception as e:
+                    print(f'Errors: {str(e)}')                        
     except Exception as e:
         print(f'Errors {str(e)}')

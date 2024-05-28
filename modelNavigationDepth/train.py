@@ -1,5 +1,5 @@
 import numpy as np
-import random
+import time
 import keyboard
 import ArducamDepthCamera as ac
 import serial
@@ -98,6 +98,7 @@ if cam.open(ac.TOFConnect.CSI,0) != 0 :
 if cam.start(ac.TOFOutput.DEPTH) != 0 :
     print("Failed to start camera")
 # Main loop
+start_time = time.monotonic()
 while True:
     # Get current state
     frame = cam.requestFrame(200)
@@ -111,6 +112,24 @@ while True:
         agent.get_com(action)
         # Update Parameters
         agent.update_parameters(state, action)
+    # Check current time
+    current_time = time.monotonic()
+    elapsed_time = current_time - start_time
+    # Stop program when time out
+    if elapsed_time >= 1:
+        # Mengirim sinyal ke Arduino berdasarkan action
+        if action == 0:
+            status = 'berhenti'
+        elif action == 1:
+            status = 'maju'
+        elif action == 2:
+            status = 'kanan'
+        elif action == 3: 
+            status = 'kiri'
+        elif action == 4:
+            status = 'mundur'
+        print(f"Status: {status} | Parameters: {agent.parameters}\nDistance: {state}")
+        start_time = current_time
     if keyboard.is_pressed('q'):
         break
 with open('model.pkl','wb') as model:

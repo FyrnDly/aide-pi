@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 from module.connectDb import ConnectFirebase
 from module.controller import navigation_robot
-from module.navigation import PolicyGradientAgent as AgentModel
+from module.navigation import AgentModel
 
 # Initialize camera
 cam = ac.ArducamCamera()

@@ -4,7 +4,7 @@ class PolicyGradientAgent:
     def __init__(self, alpha=0.1, epsilon=1, road_condition=0):
         self.alpha = alpha
         self.epsilon = epsilon
-        self.parameters = np.array([80, 60])  # Parameters distance
+        self.parameters = np.array([80, 60])  # Parameter untuk aturan
         self.road_condition = road_condition  # 0 untuk kering, 1 untuk licin
 
     def choose_action(self, state):
@@ -29,9 +29,8 @@ class PolicyGradientAgent:
     def update_parameters(self, state, action):
         # Hitung gradien dari expected reward terhadap parameter
         grad = np.zeros_like(self.parameters)
-        for i in range(len(self.parameters)):
-            reward = self.get_expected_reward(state, action)
-            grad[i] = reward / self.epsilon
+        reward = self.get_expected_reward(state, action)
+        grad[0] = reward / self.epsilon
 
         # Perbarui parameter menggunakan gradien
         self.parameters = self.parameters.astype(float)
@@ -41,7 +40,7 @@ class PolicyGradientAgent:
     def get_expected_reward(self, state, action):
         # Implementasikan fungsi ini untuk menghitung expected reward
         left, front, right = state
-        if front < self.parameters[1] or action == 0 or action == 4:
+        if action == 0 or action == 4 or front < self.parameters[1]:
             reward = 1
         else:
             reward = 0

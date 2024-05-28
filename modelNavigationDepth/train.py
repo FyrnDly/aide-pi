@@ -1,5 +1,6 @@
 import numpy as np
-import random
+import time
+import keyboard
 import ArducamDepthCamera as ac
 import serial
 import pickle
@@ -34,9 +35,8 @@ class PolicyGradientAgent:
     def update_parameters(self, state, action):
         # Hitung gradien dari expected reward terhadap parameter
         grad = np.zeros_like(self.parameters)
-        for i in range(len(self.parameters)):
-            reward = self.get_expected_reward(state, action)
-            grad[i] = reward / self.epsilon
+        reward = self.get_expected_reward(state, action)
+        grad[0] = reward / self.epsilon
 
         # Perbarui parameter menggunakan gradien
         self.parameters = self.parameters.astype(float)
@@ -46,7 +46,7 @@ class PolicyGradientAgent:
     def get_expected_reward(self, state, action):
         # Implementasikan fungsi ini untuk menghitung expected reward
         left, front, right = state
-        if front < self.parameters[1] or action == 0 or action == 4:
+        if action == 0 or action == 4 or front < self.parameters[1]:
             reward = 1
         else:
             reward = 0
@@ -86,37 +86,51 @@ if path.isfile('model.pkl'):
 else:
     agent = PolicyGradientAgent()
 
-try:
-    # Cek Kondisi jalanan
-    road_condition = 0 # Update dengan API
-    agent.road_condition = road_condition
-    # Membuat objek serial untuk komunikasi dengan Arduino
-    ser = serial.Serial('/dev/ttyACM0', 9600)
-    cam = ac.ArducamCamera()
-    # Initialize camera
-    if cam.open(ac.TOFConnect.CSI,0) != 0 :
-        print("initialization failed")
-    if cam.start(ac.TOFOutput.DEPTH) != 0 :
-        print("Failed to start camera")
-    # Main loop
-    while True:
-        # Get current state
-        frame = cam.requestFrame(200)
-        if frame != None:
-            depth_buf = frame.getDepthData()
-            cam.releaseFrame(frame)
-            state = get_current_state(depth_buf)
-            # Choose action
-            action = agent.choose_action(state)
-            # Com serial
-            agent.get_com(action)
-            # Update Parameters
-            agent.update_parameters(state, action)
-
-except KeyboardInterrupt:
-    pass
-except Exception as e:
-    print(f"Errors {e}")
-finally:
-    with open('model.pkl','wb') as model:
-        pickle.dump(agent,model)
+# Cek Kondisi jalanan
+road_condition = 0 # Update dengan API
+agent.road_condition = road_condition
+# Membuat objek serial untuk komunikasi dengan Arduino
+ser = serial.Serial('/dev/ttyACM0', 9600)
+cam = ac.ArducamCamera()
+# Initialize camera
+if cam.open(ac.TOFConnect.CSI,0) != 0 :
+    print("initialization failed")
+if cam.start(ac.TOFOutput.DEPTH) != 0 :
+    print("Failed to start camera")
+# Main loop
+start_time = time.monotonic()
+while True:
+    # Get current state
+    frame = cam.requestFrame(200)
+    if frame != None:
+        depth_buf = frame.getDepthData()
+        cam.releaseFrame(frame)
+        state = get_current_state(depth_buf)
+        # Choose action
+        action = agent.choose_action(state)
+        # Com serial
+        agent.get_com(action)
+        # Update Parameters
+        agent.update_parameters(state, action)
+    # Check current time
+    current_time = time.monotonic()
+    elapsed_time = current_time - start_time
+    # Stop program when time out
+    if elapsed_time >= 1:
+        # Mengirim sinyal ke Arduino berdasarkan action
+        if action == 0:
+            status = 'berhenti'
+        elif action == 1:
+            status = 'maju'
+        elif action == 2:
+            status = 'kanan'
+        elif action == 3: 
+            status = 'kiri'
+        elif action == 4:
+            status = 'mundur'
+        print(f"Status: {status} | Parameters: {agent.parameters}\nDistance: {state}")
+        start_time = current_time
+    if keyboard.is_pressed('q'):
+        break
+with open('model.pkl','wb') as model:
+    pickle.dump(agent,model)

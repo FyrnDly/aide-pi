@@ -1,47 +1,59 @@
 import numpy as np
 
-class PolicyGradientAgent:
-    def __init__(self, alpha=0.1, epsilon=1, road_condition=0):
+class AgentModel:
+    def __init__(self, alpha=0.1, epsilon=0.1, road_condition=0, parameter=80, threshold=60, width_agent=57, parameter_road_condition=20):
         self.alpha = alpha
         self.epsilon = epsilon
-        self.parameters = np.array([80, 60])  # Parameter untuk aturan
+        self.parameter = parameter  # Parameter untuk aturan jarak depan sensor
+        self.threshold = threshold
         self.road_condition = road_condition  # 0 untuk kering, 1 untuk licin
+        self.width_agent = width_agent
+        self.parameter_road_condition = parameter_road_condition
 
     def choose_action(self, state):
         left, front, right = state
         if self.road_condition == 1:  # Jika jalan licin, gunakan ambang batas yang lebih tinggi
-            threshold = self.parameters[0] + 20
+            self.parameter = self.parameter + self.parameter_road_condition
         else:
-            threshold = self.parameters[0]
-        if front > threshold:  # Parameter 0 adalah ambang batas untuk jarak tengah
+            self.parameter = self.parameter
+        if front > self.parameter:  # Parameter 0 adalah ambang batas untuk jarak tengah
             action = 1
-        elif self.parameters[1] < front <= threshold:  # Parameter 1 adalah ambang batas lain untuk jarak tengah
+        elif self.threshold < front <= self.parameter:  # Parameter 1 adalah ambang batas lain untuk jarak tengah
             if right > left:
                 action = 2    # kanan
             else:
                 action = 3    # kiri
-        elif front <= self.parameters[1]:
-            action = 4
+        elif front <= self.threshold:
+            action = 4      # mundur
         else:
             action = 0   # Mobil berhenti untuk menilai lingkungan
         return action
 
     def update_parameters(self, state, action):
         # Hitung gradien dari expected reward terhadap parameter
-        grad = np.zeros_like(self.parameters)
-        reward = self.get_expected_reward(state, action)
-        grad[0] = reward / self.epsilon
+        grad = np.zeros_like(self.parameter)
+        old_parameter = self.parameter
+        self.parameter += self.epsilon * self.parameter
+        reward_plus = self.get_expected_reward(state, action)
+        self.parameter = old_parameter
+        self.parameter -= self.epsilon * self.parameter
+        reward_minus = self.get_expected_reward(state, action)
+        grad = (reward_plus + reward_minus) / (2 * self.epsilon)
+        self.parameter = old_parameter
 
         # Perbarui parameter menggunakan gradien
-        self.parameters = self.parameters.astype(float)
-        self.parameters += self.alpha * grad
+        self.parameter = self.parameter.astype(float)
+        self.parameter += self.alpha * grad
 
 
     def get_expected_reward(self, state, action):
         # Implementasikan fungsi ini untuk menghitung expected reward
         left, front, right = state
-        if action == 0 or action == 4 or front < self.parameters[1]:
+        if action == 0 or action == 4 or front < self.parameter:
             reward = 1
+        elif action == 2 or action == 3:
+            if abs(right - left) > (self.width_agent/2):
+                reward = -1
         else:
             reward = 0
         return reward

@@ -25,17 +25,26 @@ if path.isfile('model.pkl'):
         agent = model
 else:
     agent = AgentModel()
+    
+# Initialize Coms Serial
+while True:
+    try:
+        ser = serial.Serial('COM4',9600)
+        break
+    except Exception as e:
+        print(f"Gagal Terhubung Arduino Error: {str(e)}")
   
 if __name__ == "__main__":
     try:
         # Load Dependency on .env
         load_dotenv()
 
-        # Connect to firebase
+        # Config firebase
         url_firebase = os.getenv('URL_FIREBASE', None)
         path_file_cred = os.getenv('CRED_PATH', None)
         app_fb = ConnectFirebase(path_file_cred, url_firebase)
         try:
+            # Connect Firebase
             app_fb.get_connect()
 
             # Get Schedule Operations
@@ -46,8 +55,7 @@ if __name__ == "__main__":
             schedule = {'08:00': '15'}
             hour_schedule = schedule.keys()
             print(f'Errors: {str(e)}')
-        # Initialize Coms Serial
-        ser = serial.Serial('COM4',9600)
+        # Robot Running
         while True:
             # Initialize Current Time
             time_zone = dt.now()

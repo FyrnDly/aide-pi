@@ -61,8 +61,8 @@ if __name__ == "__main__":
                 duration = int(schedule[hour])
                 navigation_robot(duration=duration, agentModel=agent, camera=cam)
                 
-            # Check 1 minute every time to update battery status
-            if second == '10':
+            # Check 5 minute every time to update battery status
+            if not int(minute)%5:
                 response = ser.readline().decode().strip()
                 if response:
                     try:

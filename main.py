@@ -42,6 +42,9 @@ if __name__ == "__main__":
             schedule = app_fb.get_schedule()
             hour_schedule = schedule.keys()
         except Exception as e:
+            # Default Schedule
+            schedule = {'08:00': '15'}
+            hour_schedule = schedule.keys()
             print(f'Errors: {str(e)}')
         # Initialize Coms Serial
         ser = serial.Serial('COM4',9600)
@@ -74,6 +77,8 @@ if __name__ == "__main__":
                 try:
                     # Connect to firebase
                     app_fb.get_connect()
+                    # Update status robot connection log
+                    app_fb.update_log()
                     # Get Schedule Operations
                     schedule = app_fb.get_schedule()
                     hour_schedule = schedule.keys()

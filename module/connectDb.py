@@ -43,4 +43,12 @@ class ConnectFirebase:
             return "Berhasil menambahkan data hama"
         except Exception as e:
             print(f"Gagal menambahkan jumlah hama. Error {str(e)}")
-        
+    
+    def update_log(self):
+        log = dt.now().strftime(f'%Y-%m-%d %H:%M')
+        ref = db.reference(f'/log')
+        try:
+            ref.set(log)
+            return f"Berhasil update status log {log}"
+        except Exception as e:
+            print(f"Gagal update status log. Error {str(e)}")

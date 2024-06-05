@@ -25,26 +25,37 @@ if path.isfile('model.pkl'):
         agent = model
 else:
     agent = AgentModel()
+    
+# Initialize Coms Serial
+while True:
+    try:
+        ser = serial.Serial('COM4',9600)
+        break
+    except Exception as e:
+        print(f"Gagal Terhubung Arduino Error: {str(e)}")
   
 if __name__ == "__main__":
     try:
         # Load Dependency on .env
         load_dotenv()
 
-        # Connect to firebase
+        # Config firebase
         url_firebase = os.getenv('URL_FIREBASE', None)
         path_file_cred = os.getenv('CRED_PATH', None)
         app_fb = ConnectFirebase(path_file_cred, url_firebase)
         try:
+            # Connect Firebase
             app_fb.get_connect()
 
             # Get Schedule Operations
             schedule = app_fb.get_schedule()
             hour_schedule = schedule.keys()
         except Exception as e:
+            # Default Schedule
+            schedule = {'08:00': '15'}
+            hour_schedule = schedule.keys()
             print(f'Errors: {str(e)}')
-        # Initialize Coms Serial
-        ser = serial.Serial('COM4',9600)
+        # Robot Running
         while True:
             # Initialize Current Time
             time_zone = dt.now()
@@ -58,8 +69,8 @@ if __name__ == "__main__":
                 duration = int(schedule[hour])
                 navigation_robot(duration=duration, agentModel=agent, camera=cam)
                 
-            # Check 1 minute every time to update battery status
-            if second == '10':
+            # Check 5 minute every time to update battery status
+            if not int(minute)%5:
                 response = ser.readline().decode().strip()
                 if response:
                     try:
@@ -74,6 +85,8 @@ if __name__ == "__main__":
                 try:
                     # Connect to firebase
                     app_fb.get_connect()
+                    # Update status robot connection log
+                    app_fb.update_log()
                     # Get Schedule Operations
                     schedule = app_fb.get_schedule()
                     hour_schedule = schedule.keys()

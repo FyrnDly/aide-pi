@@ -31,7 +31,7 @@ class AgentModel:
 
     def update_parameters(self, state, action):
         # Hitung gradien dari expected reward terhadap parameter
-        grad = np.zeros_like(self.parameter)
+        grad = 0
         old_parameter = self.parameter
         self.parameter += self.epsilon * self.parameter
         reward_plus = self.get_expected_reward(state, action)
@@ -42,7 +42,6 @@ class AgentModel:
         self.parameter = old_parameter
 
         # Perbarui parameter menggunakan gradien
-        self.parameter = self.parameter.astype(float)
         self.parameter += self.alpha * grad
 
 

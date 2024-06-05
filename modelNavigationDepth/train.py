@@ -37,7 +37,7 @@ class AgentModel:
 
     def update_parameters(self, state, action):
         # Hitung gradien dari expected reward terhadap parameter
-        grad = np.zeros_like(self.parameter)
+        grad = 0
         old_parameter = self.parameter
         self.parameter += self.epsilon * self.parameter
         reward_plus = self.get_expected_reward(state, action)
@@ -48,7 +48,6 @@ class AgentModel:
         self.parameter = old_parameter
 
         # Perbarui parameter menggunakan gradien
-        self.parameter = self.parameter.astype(float)
         self.parameter += self.alpha * grad
 
 
@@ -112,37 +111,38 @@ if cam.start(ac.TOFOutput.DEPTH) != 0 :
 # Main loop
 start_time = time.monotonic()
 while True:
-    # Get current state
-    frame = cam.requestFrame(200)
-    if frame != None:
-        depth_buf = frame.getDepthData()
-        cam.releaseFrame(frame)
-        state = get_current_state(depth_buf)
-        # Choose action
-        action = agent.choose_action(state)
-        # Com serial
-        agent.get_com(action)
-        # Update Parameters
-        agent.update_parameters(state, action)
-    # Check current time
-    current_time = time.monotonic()
-    elapsed_time = current_time - start_time
-    # Stop program when time out
-    if elapsed_time >= 1:
-        # Mengirim sinyal ke Arduino berdasarkan action
-        if action == 0:
-            status = 'berhenti'
-        elif action == 1:
-            status = 'maju'
-        elif action == 2:
-            status = 'kanan'
-        elif action == 3: 
-            status = 'kiri'
-        elif action == 4:
-            status = 'mundur'
-        print(f"Status: {status} | Parameters: {agent.parameters}\nDistance: {state}")
-        start_time = current_time
-    if keyboard.is_pressed('q'):
+    try:
+        # Get current state
+        frame = cam.requestFrame(200)
+        if frame != None:
+            depth_buf = frame.getDepthData()
+            cam.releaseFrame(frame)
+            state = get_current_state(depth_buf)
+            # Choose action
+            action = agent.choose_action(state)
+            # Com serial
+            agent.get_com(action)
+            # Update Parameters
+            agent.update_parameters(state, action)
+        # Check current time
+        current_time = time.monotonic()
+        elapsed_time = current_time - start_time
+        # Stop program when time out
+        if elapsed_time >= 1:
+            # Mengirim sinyal ke Arduino berdasarkan action
+            if action == 0:
+                status = 'berhenti'
+            elif action == 1:
+                status = 'maju'
+            elif action == 2:
+                status = 'kanan'
+            elif action == 3: 
+                status = 'kiri'
+            elif action == 4:
+                status = 'mundur'
+            print(f"Status: {status} | Parameters: {agent.parameter}\nDistance: {state}")
+            start_time = current_time
+    except KeyboardInterrupt:
         break
 with open('model.pkl','wb') as model:
     pickle.dump(agent,model)

@@ -1,0 +1,11 @@
+[Unit]
+Description=Auto Running Code Service
+After=network.target
+
+[Service]
+ExecStart=/bin/bash -c "cd ~/iot && python main.py"
+Restart=always
+User=aide
+
+[Install]
+WantedBy=multi-user.target

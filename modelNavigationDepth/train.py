@@ -5,6 +5,7 @@ import ArducamDepthCamera as ac
 import serial
 import pickle
 import os.path as path
+import logging
 
 class AgentModel:
     def __init__(self, alpha=0.1, epsilon=0.1, road_condition=0, parameter=80, threshold=60, width_agent=57, parameter_road_condition=20):
@@ -67,14 +68,19 @@ class AgentModel:
         # Mengirim sinyal ke Arduino berdasarkan action
         if action == 0:
             ser.write(b'berhenti')
+            # pass
         elif action == 1:
             ser.write(b'maju')
+            # pass
         elif action == 2:
             ser.write(b'kanan')
+            # pass
         elif action == 3: 
             ser.write(b'kiri')
+            # pass
         elif action == 4:
             ser.write(b'mundur')
+            # pass
 
 def get_current_state(depth_buf):
     # Mengambil jarak di posisi tengah, kiri, dan kanan frame
@@ -97,6 +103,9 @@ if path.isfile('model.pkl'):
 else:
     agent = AgentModel()
 
+# Add Log Info
+logging.basicConfig(filename='output.log', level=logging.INFO)
+logging.info("Mulai Program")
 # Cek Kondisi jalanan
 road_condition = 0 # Update dengan API
 agent.road_condition = road_condition
@@ -105,9 +114,9 @@ ser = serial.Serial('/dev/ttyACM0', 9600)
 cam = ac.ArducamCamera()
 # Initialize camera
 if cam.open(ac.TOFConnect.CSI,0) != 0 :
-    print("initialization failed")
+    logging.info("initialization failed")
 if cam.start(ac.TOFOutput.DEPTH) != 0 :
-    print("Failed to start camera")
+    logging.info("Failed to start camera")
 # Main loop
 start_time = time.monotonic()
 while True:
@@ -140,7 +149,7 @@ while True:
                 status = 'kiri'
             elif action == 4:
                 status = 'mundur'
-            print(f"Status: {status} | Parameters: {agent.parameter}\nDistance: {state}")
+            logging.info(f"Status: {status} | Parameters: {agent.parameter}\nDistance: {state}")
             start_time = current_time
     except KeyboardInterrupt:
         break

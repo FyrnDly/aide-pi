@@ -4,20 +4,25 @@ import pickle
 import time
 import numpy as np
 import os.path as path
-import ArducamDepthCamera as ac
+# import ArducamDepthCamera as ac
 from datetime import datetime as dt
 from dotenv import load_dotenv
+import logging
 
 from module.connectDb import ConnectFirebase
 from module.controller import navigation_robot
 from module.navigation import AgentModel
 
+# Add Log Info
+logging.basicConfig(filename='output.log', level=logging.INFO)
+logging.info("Mulai Program")
+
 # Initialize camera
-cam = ac.ArducamCamera()
-if cam.open(ac.TOFConnect.CSI,0) != 0 :
-    print("initialization failed")
-if cam.start(ac.TOFOutput.DEPTH) != 0 :
-    print("Failed to start camera")
+# cam = ac.ArducamCamera()
+# if cam.open(ac.TOFConnect.CSI,0) != 0 :
+#     logging.info("initialization failed")
+# if cam.start(ac.TOFOutput.DEPTH) != 0 :
+#     logging.info("Failed to start camera")
 
 # Initialize RL agent
 if path.isfile('model.pkl'):
@@ -32,7 +37,7 @@ while True:
         ser = serial.Serial('COM4',9600)
         break
     except Exception as e:
-        print(f"Gagal Terhubung Arduino Error: {str(e)}")
+        logging.info(f"Gagal Terhubung Arduino Error: {str(e)}")
   
 if __name__ == "__main__":
     try:
@@ -54,7 +59,7 @@ if __name__ == "__main__":
             # Default Schedule
             schedule = {'08:00': '15'}
             hour_schedule = schedule.keys()
-            print(f'Errors: {str(e)}')
+            logging.info(f'Errors: {str(e)}')
         # Robot Running
         while True:
             # Initialize Current Time
@@ -76,9 +81,9 @@ if __name__ == "__main__":
                     try:
                         battery_value = int(float(response))  
                         app_fb.update_battery(battery_value)
-                        print(app_fb.get_battery())
+                        logging.info(app_fb.get_battery())
                     except Exception as e:
-                        print(f"Data tidak valid: {str(e)} | {type(response)}")
+                        logging.info(f"Data tidak valid: {str(e)} | {type(response)}")
                         
             # Update Schedule and Try Connect Firebase every hour
             if minute == '01':
@@ -91,6 +96,6 @@ if __name__ == "__main__":
                     schedule = app_fb.get_schedule()
                     hour_schedule = schedule.keys()
                 except Exception as e:
-                    print(f'Errors: {str(e)}')                        
+                    logging.info(f'Errors: {str(e)}')                        
     except Exception as e:
-        print(f'Errors {str(e)}')
+        logging.info(f'Errors {str(e)}')

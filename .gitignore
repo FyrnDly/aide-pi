@@ -3,3 +3,4 @@ env
 config.json
 __pycache__
 model.pkl
+output.log

@@ -18,11 +18,11 @@ logging.basicConfig(filename='output.log', level=logging.INFO)
 logging.info("Mulai Program")
 
 # Initialize camera
-# cam = ac.ArducamCamera()
-# if cam.open(ac.TOFConnect.CSI,0) != 0 :
-#     logging.info("initialization failed")
-# if cam.start(ac.TOFOutput.DEPTH) != 0 :
-#     logging.info("Failed to start camera")
+cam = ac.ArducamCamera()
+if cam.open(ac.TOFConnect.CSI,0) != 0 :
+    logging.info("initialization failed")
+if cam.start(ac.TOFOutput.DEPTH) != 0 :
+    logging.info("Failed to start camera")
 
 # Initialize RL agent
 if path.isfile('model.pkl'):

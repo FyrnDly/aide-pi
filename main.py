@@ -82,7 +82,7 @@ if __name__ == "__main__":
             #             logging.info(f"Data tidak valid: {str(e)} | {type(response)}")
                         
             # Update Schedule and Try Connect Firebase every hour
-            if minute == '01':
+            if minute == '5':
                 try:
                     # Connect to firebase
                     app_fb.get_connect()
@@ -92,6 +92,7 @@ if __name__ == "__main__":
                     schedule = app_fb.get_schedule()
                     hour_schedule = schedule.keys()
                     logging.info(f'AIDE Berhasil Terhubung dengan Server pada jam {hour}:{minute}')
+                    time.sleep(60)
                 except Exception as e:
                     logging.info(f'Errors: {str(e)}')                        
     except Exception as e:

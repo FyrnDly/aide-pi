@@ -1,20 +1,17 @@
-import numpy as np
 import time
-import keyboard
 import ArducamDepthCamera as ac
 import serial
-import pickle
-import os.path as path
 import logging
+import time
 
 class AgentModel:
-    def __init__(self, alpha=0.1, epsilon=0.1, road_condition=0, parameter=80, threshold=60, width_agent=57, parameter_road_condition=20):
+    def __init__(self, alpha=0.1, epsilon=0.1, road_condition=0, parameter=70, threshold=50, length_agent=85, parameter_road_condition=20):
         self.alpha = alpha
         self.epsilon = epsilon
         self.parameter = parameter  # Parameter untuk aturan jarak depan sensor
         self.threshold = threshold
         self.road_condition = road_condition  # 0 untuk kering, 1 untuk licin
-        self.width_agent = width_agent
+        self.length_agent = length_agent
         self.parameter_road_condition = parameter_road_condition
 
     def choose_action(self, state):
@@ -55,11 +52,18 @@ class AgentModel:
     def get_expected_reward(self, state, action):
         # Implementasikan fungsi ini untuk menghitung expected reward
         left, front, right = state
-        if action == 0 or action == 4 or front < self.parameter:
+        if action == 0 or action == 4 or front < self.threshold:
             reward = 1
-        elif action == 2 or action == 3:
-            if abs(right - left) > (self.width_agent/2):
-                reward = -1
+        elif action == 2:
+            if left > self.length_agent or right < self.length_agent:
+                reward = -1.5
+            else:
+                reward = 0
+        elif action == 3:
+            if right > self.length_agent or left < self.length_agent:
+                reward = -1.5
+            else:
+                reward = 0
         else:
             reward = 0
         return reward
@@ -67,19 +71,19 @@ class AgentModel:
     def get_com(self, action):
         # Mengirim sinyal ke Arduino berdasarkan action
         if action == 0:
-            ser.write(b'berhenti')
+            ser.write(b'berhenti\n')
             # pass
         elif action == 1:
-            ser.write(b'maju')
+            ser.write(b'maju\n')
             # pass
         elif action == 2:
-            ser.write(b'kanan')
+            ser.write(b'kanan\n')
             # pass
         elif action == 3: 
-            ser.write(b'kiri')
+            ser.write(b'kiri\n')
             # pass
         elif action == 4:
-            ser.write(b'mundur')
+            ser.write(b'mundur\n')
             # pass
 
 def get_current_state(depth_buf):
@@ -97,26 +101,25 @@ def get_current_state(depth_buf):
     return state
 
 # Initialize RL agent
-if path.isfile('model.pkl'):
-    with open('model.pkl','rb') as model:
-        agent = model
-else:
-    agent = AgentModel()
+agent = AgentModel()
 
 # Add Log Info
 logging.basicConfig(filename='output.log', level=logging.INFO)
 logging.info("Mulai Program")
+print("Mulai Program")
 # Cek Kondisi jalanan
 road_condition = 0 # Update dengan API
 agent.road_condition = road_condition
 # Membuat objek serial untuk komunikasi dengan Arduino
-ser = serial.Serial('/dev/ttyACM0', 9600)
+ser = serial.Serial('/dev/ttyUSB0', 9600)
 cam = ac.ArducamCamera()
 # Initialize camera
 if cam.open(ac.TOFConnect.CSI,0) != 0 :
     logging.info("initialization failed")
+    print("initialization failed")
 if cam.start(ac.TOFOutput.DEPTH) != 0 :
     logging.info("Failed to start camera")
+    print("Failed to start camera")
 # Main loop
 start_time = time.monotonic()
 while True:
@@ -133,25 +136,33 @@ while True:
             agent.get_com(action)
             # Update Parameters
             agent.update_parameters(state, action)
+            
+        # Log Output Status
+        if action == 0:
+            status = 'berhenti'
+        elif action == 1:
+            status = 'maju'
+        elif action == 2:
+            status = 'kanan'
+        elif action == 3: 
+            status = 'kiri'
+        elif action == 4:
+            status = 'mundur'
+        print(f"Status: {status} | Parameters: {agent.parameter}\nDistance: {state}")
+        # Check Status on Arduino
+        response = ser.readline().decode().strip()
+        if response:
+            try:
+                print(f"Status pada Arduino: {response}")
+            except Exception as e:
+                print(f"Gagal terhubung: {str(e)} | {type(response)}")
+        # Print Status every second
         # Check current time
         current_time = time.monotonic()
         elapsed_time = current_time - start_time
-        # Stop program when time out
         if elapsed_time >= 1:
             # Mengirim sinyal ke Arduino berdasarkan action
-            if action == 0:
-                status = 'berhenti'
-            elif action == 1:
-                status = 'maju'
-            elif action == 2:
-                status = 'kanan'
-            elif action == 3: 
-                status = 'kiri'
-            elif action == 4:
-                status = 'mundur'
             logging.info(f"Status: {status} | Parameters: {agent.parameter}\nDistance: {state}")
             start_time = current_time
     except KeyboardInterrupt:
         break
-with open('model.pkl','wb') as model:
-    pickle.dump(agent,model)

@@ -1,5 +1,4 @@
 import time
-import pickle
 from module.navigation import get_current_state as state_model
 
 # Program navigation
@@ -16,6 +15,9 @@ def navigation_robot(duration, agentModel, camera):
             action = agentModel.choose_action(state)
             # Com serial
             agentModel.get_com(action)
+            # Get Delay Arduino
+            ser = agentModel.ser
+            response = ser.readline().decode().strip()
             # Update Parameters
             agentModel.update_parameters(state, action)
         
@@ -25,5 +27,3 @@ def navigation_robot(duration, agentModel, camera):
         # Stop program when time out
         if elapsed_time >= duration:
             break
-    with open('model.pkl','wb') as model:
-        pickle.dump(agentModel,model)

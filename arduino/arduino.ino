@@ -15,20 +15,31 @@ void loop() {
     String receivedData = Serial.readStringUntil('\n');
     receivedData.trim();  // Hapus karakter newline
     if (receivedData == "maju") {
+      Serial.println("Mobil Maju");
       maju();
-    } else if (receivedData == "berhenti"){
-      berhenti();
+      delay(500);
+    } else if (receivedData == "mundur"){
+      Serial.println("Mobil Mundur");
+      mundur();
+      delay(1000);
     } else if (receivedData == "kiri"){
+      Serial.println("Mobil Belok Kiri");
       kiri();
+      delay(500);
     } else if (receivedData == "kanan"){
+      Serial.println("Mobil Belok Kanan");
       kanan();
+      delay(500);
     } else if (receivedData == "berhenti"){
+      Serial.println("Mobil Berhenti");
       berhenti();
+      delay(1000);
     }
+  } else {
+    // Ganti dengan Code untuk intput baterai, jika ada
+    Serial.println("Arduino Stand by");
+    delay(100);
   }
-  float randomValue = random(100);
-  Serial.println(randomValue, 2);
-  delay(1000);
 }
 
 void maju() {

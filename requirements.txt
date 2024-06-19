@@ -1,3 +1,5 @@
+Adafruit-PureIO==1.1.11
+Adafruit_GPIO==1.0.3
 aniso8601==9.0.1
 blinker==1.8.2
 CacheControl==0.14.0
@@ -28,10 +30,13 @@ idna==3.7
 iso8601==2.1.0
 itsdangerous==2.2.0
 Jinja2==3.1.4
+keyboard==0.13.5
 MarkupSafe==2.1.5
+mock==5.1.0
 msgpack==1.0.8
 numpy==1.26.4
 opencv-python==4.9.0.80
+pi-ina219==1.4.1
 proto-plus==1.23.0
 protobuf==4.25.3
 pyasn1==0.6.0

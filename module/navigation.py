@@ -1,14 +1,15 @@
-import numpy as np
+import serial
 
 class AgentModel:
-    def __init__(self, alpha=0.1, epsilon=0.1, road_condition=0, parameter=80, threshold=60, width_agent=57, parameter_road_condition=20):
+    def __init__(self, alpha=0.1, epsilon=0.1, road_condition=0, parameter=70, threshold=50, length_agent=85, parameter_road_condition=20, comSerial=serial.Serial('/dev/ttyUSB0',9600)):
         self.alpha = alpha
         self.epsilon = epsilon
         self.parameter = parameter  # Parameter untuk aturan jarak depan sensor
         self.threshold = threshold
         self.road_condition = road_condition  # 0 untuk kering, 1 untuk licin
-        self.width_agent = width_agent
+        self.length_agent = length_agent
         self.parameter_road_condition = parameter_road_condition
+        self.ser = comSerial
 
     def choose_action(self, state):
         left, front, right = state
@@ -48,11 +49,18 @@ class AgentModel:
     def get_expected_reward(self, state, action):
         # Implementasikan fungsi ini untuk menghitung expected reward
         left, front, right = state
-        if action == 0 or action == 4 or front < self.parameter:
+        if action == 0 or action == 4 or front < self.threshold:
             reward = 1
-        elif action == 2 or action == 3:
-            if abs(right - left) > (self.width_agent/2):
-                reward = -1
+        elif action == 2:
+            if left > self.length_agent or right < self.length_agent:
+                reward = -1.5
+            else:
+                reward = 0
+        elif action == 3:
+            if right > self.length_agent or left < self.length_agent:
+                reward = -1.5
+            else:
+                reward = 0
         else:
             reward = 0
         return reward
@@ -60,17 +68,18 @@ class AgentModel:
     def get_com(self, action):
         # Mengirim sinyal ke Arduino berdasarkan action
         if action == 0:
-            ser.write(b'berhenti')
+            self.ser.write(b'berhenti\n')
         elif action == 1:
-            ser.write(b'maju')
+            self.ser.write(b'maju\n')
         elif action == 2:
-            ser.write(b'kanan')
+            self.ser.write(b'kanan\n')
         elif action == 3: 
-            ser.write(b'kiri')
+            self.ser.write(b'kiri\n')
         elif action == 4:
-            ser.write(b'mundur')
+            self.ser.write(b'mundur\n')
             
 def get_current_state(depth_buf):
+    # Ubah code current sesuaikan dengan sensor jarak yang digunakan
     # Mengambil jarak di posisi tengah, kiri, dan kanan frame
     y = depth_buf.shape[0] // 2
     x_center = depth_buf.shape[1] // 2

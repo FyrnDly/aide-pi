@@ -20,7 +20,7 @@ class AgentModel:
             self.parameter = self.parameter + self.parameter_road_condition
         else:
             self.parameter = self.parameter
-        if front > self.parameter:  # Parameter 0 adalah ambang batas untuk jarak tengah
+        if front > self.parameter or front == 0:  # Parameter 0 adalah ambang batas untuk jarak tengah
             action = 1
         elif self.threshold < front <= self.parameter:  # Parameter 1 adalah ambang batas lain untuk jarak tengah
             if right > left:

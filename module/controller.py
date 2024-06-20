@@ -26,4 +26,6 @@ def navigation_robot(duration, agentModel, camera):
         elapsed_time = current_time - start_time
         # Stop program when time out
         if elapsed_time >= duration:
+            ser = agentModel.ser
+            ser.write(b'berhenti\n')
             break

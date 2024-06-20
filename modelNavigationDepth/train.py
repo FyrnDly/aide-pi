@@ -165,4 +165,5 @@ while True:
             logging.info(f"Status: {status} | Parameters: {agent.parameter}\nDistance: {state}")
             start_time = current_time
     except KeyboardInterrupt:
+        ser.write(b'berhenti\n')
         break
